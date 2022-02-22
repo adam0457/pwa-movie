@@ -19,7 +19,13 @@ const APP = {
     btnSearch: null,
     queryMovie:null,
     results:[],
-    keyword:[],
+    keyword:null,
+    dataList:null,
+    // obj:null,
+
+    /** variables for the dB */
+    DB:null,
+    version:2,
 
 
   init: () => {
@@ -30,6 +36,7 @@ const APP = {
     APP.APIKEY = '75789c3f5ba1cec6147292baa65a1ecc';
     APP.urlConfig = `https://api.themoviedb.org/3/configuration?api_key=75789c3f5ba1cec6147292baa65a1ecc`;
 
+    APP.initDb();
     APP.getConfig();    
     APP.addListeners();
     APP.pageSpecific();
@@ -39,23 +46,127 @@ const APP = {
   addListeners: () => {
   
     APP.btnSearch.addEventListener('click', APP.search);
-    APP.cards.addEventListener('click', APP.handleClickMovie);
-
-   
+    APP.cards.addEventListener('click', APP.handleClickMovie);  
 
   },
+
+  initDb:() => {
+    let dbOpenRequest = indexedDB.open('PWAmovieDB', APP.version);
+
+
+    dbOpenRequest.onupgradeneeded = function (ev) {
+      APP.DB = dbOpenRequest.result;
+      let searchStore = APP.DB.createObjectStore('searchStore', {keyPath: 'keyword'});
+      let suggestedStore = APP.DB.createObjectStore('suggestedStore', {keyPath: 'movieId'});
+    };
+
+    dbOpenRequest.onerror = function (err) {
+        console.log(err.message);
+    };
+
+    dbOpenRequest.onsuccess = function (err) {
+      APP.DB = dbOpenRequest.result;
+  };
+
+  } ,
 
   search: (ev) => {
     ev.preventDefault();
     APP.queryMovie = APP.inputName.value.trim();
     if(APP.queryMovie !== ''){
-      APP.navigate(`http://127.0.0.1:5500/search-results.html?keyword=${APP.queryMovie}`);
-      // APP.getMovies(APP.queryMovie);
-      
+      APP.findInDBorFetch(APP.queryMovie);
+      // APP.navigate(`http://127.0.0.1:5500/search-results.html?keyword=${APP.queryMovie}`); 
     }
     else {alert('You did not enter anything')}
   
     APP.inputName.value = '';  
+  },
+
+  findInDBorFetch: (keyword)=>{
+       //do search in db for match after clicking search link
+      console.log(`check db for ${keyword}`);
+      APP.getMatch(keyword);
+       //this will trigger the `complete` event that will call matchFound
+       window.addEventListener('complete', APP.dbMatchResults, {once:true}); //after doing a search in db
+  },
+
+  getMatch:(keyword)=>{
+        
+    let tx = APP.DB.transaction('searchStore', 'readwrite');
+    tx.onerror = (err) => {
+      console.log('failed to successfully run the transaction');
+    };
+    tx.oncomplete = (ev) => {
+      console.log('finished the transaction... wanna do something else');
+    };
+    let searchStore = tx.objectStore('searchStore');
+    // console.log(searchStore);
+    let searchWord = keyword;
+    let getRequest = searchStore.get(searchWord);
+    getRequest.onerror = (err) => {
+      //error with get request... will trigger the tx.onerror too
+    };
+    getRequest.onsuccess = (ev) => {
+      let res;
+      let obj = getRequest.result;
+      if(obj){
+        res = obj.results;
+      }else{
+        res=[];
+      }            
+      console.log(res);
+      window.dispatchEvent( APP.oncomplete(res) );
+    };
+  },
+
+  getResultsFromDB:(keyword) =>{
+
+    let tx = APP.DB.transaction('searchStore', 'readwrite');
+    console.log(tx);
+    // tx.onerror = (err) => {
+    //   console.log('failed to successfully run the transaction');
+    // };
+    // tx.oncomplete = (ev) => {
+    //   console.log('finished the transaction... wanna do something else');
+    // };
+    // let searchStore = tx.objectStore('searchStore');
+  
+    // let searchWord = keyword;
+    // let getRequest = searchStore.get(searchWord);
+    // getRequest.onerror = (err) => {
+     
+    // };
+    // getRequest.onsuccess = (ev) => {
+    //   let res;
+    //   let obj = getRequest.result.results;
+    //   console.log(`we are taking data from the database: ${obj}`);          
+      
+    // };
+  },
+
+
+  oncomplete: (res) => {   
+    return new CustomEvent('complete', {detail: {results: res}});
+  },
+
+  dbMatchResults:(ev)=>{     
+    
+      console.log(`results from db ${ev.detail.results}`);
+      APP.dataList = ev.detail.results;
+
+      console.log(`the keyword is: ${APP.queryMovie}`);
+     
+      if(APP.dataList.length === 0){
+           //need to do fetch
+          //  APP.doFetch(APP.keyword);
+          APP.fetchMovies(APP.queryMovie)
+        console.log('no data in DB');
+        
+      }else{
+           //there is a match so navigate
+          //  APP.navigate(APP.keyword)
+        console.log(' data found in DB');
+      }
   },
 
   getConfig: () => {
@@ -86,28 +197,45 @@ const APP = {
 
   },
 
-  fetchMovies: (url) => {
+  fetchMovies: (queryString) => {
+    let url = `https://api.themoviedb.org/3/search/movie?api_key=${APP.APIKEY}&query=${queryString}`
     fetch(url)
               .then(response => {
                 return response.json();
               }).then(data => {
-                // APP.actorsArr = data.results;
-                // localStorage.setItem(APP.queryActor, JSON.stringify(APP.actorsArr));
-                /** The function fetchActor is using the displayCards function to display the info of 
-                 * the actors(photo, name and a number of stars emoji based on his popularity)
-                 * 
-                 */
-                // DISPLAY.displayCards(APP.actorsArr, 'actor');
-                APP.results = data.results;
-                // console.log(data);
-                console.log(APP.results);
-                APP.displayMovies(APP.results);
+
+                console.log(data.results);              
+               
+                let searchResults = {keyword:queryString, results:data.results};
+                console.log(`This is the value of searchResults: ${searchResults}`);
+                // APP.displayMovies(APP.results);
               
-                
-                
+                APP.saveToDb(searchResults);
+                              
               }).catch(err => {
                 alert(err);
               })
+  },
+
+  saveToDb: (searchResults) => {
+    let tx = APP.DB.transaction('searchStore', 'readwrite');
+    tx.oncomplete = function(ev) {
+      
+    };
+    tx.onerror = function(ev){
+      console.log('Can not finish the transaction');
+    };
+    let movieStore = tx.objectStore('searchStore');
+    let addRequest = movieStore.add(searchResults);
+    addRequest.onerror = function(err){
+      console.warn('Failed to add', err.message);
+    };
+
+    addRequest.onsuccess = function(ev){
+      console.log(ev.target.result);
+      console.log('insertion succeeded');
+      APP.navigate(`./search-results.html?keyword=${APP.queryMovie}`);
+    };
   },
 
   navigate: (url) => {
@@ -121,22 +249,16 @@ const APP = {
         console.log('We are on the home page');
     }
     if(document.body.id === 'results'){
-        //on the results page
-        //listener for clicking on the movie card container 
-        console.log('we are on the results page');
-        let qs = location.search.substring(1);
-        let searchParams = new URLSearchParams(qs);
        
-        // Display the values
-        let i = 0;
-        for(let value of searchParams.values()) {
-          // console.log(value);
-          APP.keyword[i] = value;
-          i++;
-        }
-
-        console.log(APP.keyword[0]);
-        APP.getMovies(APP.keyword[0]);
+      let url = new URL(window.location.href);
+            let params = url.searchParams;
+            
+            APP.queryMovie = params.get('keyword');
+            console.log(`the keyword is: ${APP.queryMovie}`);
+            console.log(APP.DB);
+            // APP.getResultsFromDB(APP.queryMovie);      
+        // APP.getMovies(APP.keyword[0]);
+      
     }
     if(document.body.id === 'suggest'){
         //on the suggest page
