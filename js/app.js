@@ -122,26 +122,25 @@ const APP = {
   getResultsFromDB:(keyword) =>{
 
     let tx = APP.DB.transaction('searchStore', 'readwrite');
-    console.log(tx);
-    // tx.onerror = (err) => {
-    //   console.log('failed to successfully run the transaction');
-    // };
-    // tx.oncomplete = (ev) => {
-    //   console.log('finished the transaction... wanna do something else');
-    // };
-    // let searchStore = tx.objectStore('searchStore');
   
-    // let searchWord = keyword;
-    // let getRequest = searchStore.get(searchWord);
-    // getRequest.onerror = (err) => {
-     
-    // };
-    // getRequest.onsuccess = (ev) => {
-    //   let res;
-    //   let obj = getRequest.result.results;
-    //   console.log(`we are taking data from the database: ${obj}`);          
+    tx.onerror = (err) => {
+      console.log('failed to successfully run the transaction');
+    };
+    tx.oncomplete = (ev) => {
+      console.log('finished the transaction... wanna do something else');
+    };
+    let searchStore = tx.objectStore('searchStore');
+  
+    let searchWord = keyword;
+    let getRequest = searchStore.get(searchWord);
+    getRequest.onerror = (err) => {
+    
+    };
+    getRequest.onsuccess = (ev) => {
+      let result = getRequest.result.results;
+      APP.displayMovies(result);
       
-    // };
+    };
   },
 
 
@@ -249,13 +248,17 @@ const APP = {
         console.log('We are on the home page');
     }
     if(document.body.id === 'results'){
-       
+      
       let url = new URL(window.location.href);
             let params = url.searchParams;
             
             APP.queryMovie = params.get('keyword');
-            console.log(`the keyword is: ${APP.queryMovie}`);
-            console.log(APP.DB);
+            console.log(`the keyword is: ${APP.queryMovie}`);          
+            setTimeout(()=>{
+              // console.log(APP.DB);
+              APP.getResultsFromDB(APP.queryMovie);
+            },1000);
+            
             // APP.getResultsFromDB(APP.queryMovie);      
         // APP.getMovies(APP.keyword[0]);
       
