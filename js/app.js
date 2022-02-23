@@ -153,18 +153,16 @@ const APP = {
       console.log(`results from db ${ev.detail.results}`);
       APP.dataList = ev.detail.results;
 
-      console.log(`the keyword is: ${APP.queryMovie}`);
+      // console.log(`the keyword is: ${APP.queryMovie}`);
      
       if(APP.dataList.length === 0){
            //need to do fetch
-          //  APP.doFetch(APP.keyword);
-          APP.fetchMovies(APP.queryMovie)
-        console.log('no data in DB');
-        
+        APP.fetchMovies(APP.queryMovie)
+                
       }else{
            //there is a match so navigate
-          //  APP.navigate(APP.keyword)
-        console.log(' data found in DB');
+          APP.navigate(`./search-results.html?keyword=${APP.queryMovie}`);
+        
       }
   },
 
@@ -371,7 +369,8 @@ displayMovies: (arr) => {
 handleClickMovie: (ev) => {
   // I need to pass the id of the movie along with the keyword to the suggested-results page
 let movieId = ev.target.closest('.card').getAttribute('data-movie-id');
-APP.navigate(`http://127.0.0.1:5500/suggested-movies.html?keyword=${APP.keyword[0]}&movieId=${movieId}`);
+APP.navigate(`./suggested-movies.html?keyword=${APP.queryMovie}&movieId=${movieId}`);
+
 },
 
 
