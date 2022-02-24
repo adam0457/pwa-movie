@@ -133,9 +133,9 @@ const APP = {
     
   },  
 
-  getResultsFromDB:(keyword) =>{
+  getResultsFromDB:(keyword, store) =>{
 
-    let tx = APP.DB.transaction('searchStore', 'readwrite');
+    let tx = APP.DB.transaction(store, 'readwrite');
   
     tx.onerror = (err) => {
       console.log('failed to successfully run the transaction');
@@ -143,7 +143,7 @@ const APP = {
     tx.oncomplete = (ev) => {
       console.log('finished the transaction... wanna do something else');
     };
-    let searchStore = tx.objectStore('searchStore');
+    let searchStore = tx.objectStore(store);
   
     let searchWord = keyword;
     let getRequest = searchStore.get(searchWord);
@@ -243,36 +243,30 @@ const APP = {
             let params = url.searchParams;
             
             APP.keyword = params.get('keyword');
+            let searchStore = 'searchStore';
             console.log(`the keyword is: ${APP.keyword}`);          
             setTimeout(()=>{
               // console.log(APP.DB);
-              APP.getResultsFromDB(APP.keyword);
+              APP.getResultsFromDB(APP.keyword, searchStore);
             },1000);            
                 
     }
     if(document.body.id === 'suggest'){
-        //on the suggest page
-        //listener for clicking on the movie card container 
         console.log('We are on the suggest page');
-
-        let qs = location.search.substring(1);
-        let searchParams = new URLSearchParams(qs);
-       
-        // Display the values
-        let i = 0;
-        for(let value of searchParams.values()) {
-          // console.log(value);
-          APP.keyword[i] = value;
-          i++;
-        }
-        //   let val = APP.keyword[1];
-        //   parseInt(val);
-        // console.log(typeof val);
-        // let num = 38575;
-        // console.log(Number(val));
-        APP.getSimilarMovies(Number(APP.keyword[1]));
-        // APP.getSimilarMovies(num);
-
+        let url = new URL(window.location.href);
+            let params = url.searchParams;
+            
+            APP.keyword = params.get('keyword');
+            APP.movieId = params.get('movieId');
+            
+            console.log(`the keyword is: ${APP.keyword}`); 
+            console.log(`the movieId is: ${APP.movieId}`); 
+            let suggestedStore = 'suggestedStore';
+            setTimeout(()=>{
+              // console.log(APP.DB);
+              APP.getResultsFromDB(APP.movieId, suggestedStore);
+            },1000);   
+          
     }
     if(document.body.id === 'fourohfour'){
         //on the 404 page
