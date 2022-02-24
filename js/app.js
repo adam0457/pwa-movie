@@ -17,10 +17,13 @@ const APP = {
     inputName : null,
     urlConfig : `https://api.themoviedb.org/3/configuration?api_key=75789c3f5ba1cec6147292baa65a1ecc`,
     btnSearch: null,
-    queryMovie:null,
+    //queryMovie:null,
     results:[],
     keyword:null,
+    movieId:null,
     dataList:null,
+    nextPage:null,
+    searchOrSuggest:null,
     // obj:null,
 
     /** variables for the dB */
@@ -72,11 +75,14 @@ const APP = {
 
   search: (ev) => {
     ev.preventDefault();
-    APP.queryMovie = APP.inputName.value.trim();
-    if(APP.queryMovie !== ''){
+    APP.keyword = APP.inputName.value.trim();
+    let searchStore = 'searchStore';
+    APP.nextPage = `./search-results.html?keyword=${APP.keyword}`;
+    APP.searchOrSuggest = 'search';
+    if(APP.keyword !== ''){
       // APP.findInDBorFetch(APP.queryMovie);
       // APP.checkInDB(APP.queryMovie);
-      APP.checkInDB(APP.queryMovie, APP.decideAfter); 
+      APP.checkInDB(APP.keyword, searchStore, APP.decideAfter); 
     }
     else {alert('You did not enter anything')}
   
@@ -84,21 +90,28 @@ const APP = {
   },
 
   decideAfter:()=>{
-        // console.log(APP.results);
+        console.log(APP.results);
 
-        if(APP.results.length === 0){          
-          APP.fetchMovies(APP.queryMovie)
-          console.log('no data in DB');
+        if(APP.results.length === 0){ 
+            if(APP.searchOrSuggest === 'search'){
+              APP.fetchMovies(APP.keyword)
+              console.log('no data in DB we will call fetch movies');
+            } else if(APP.searchOrSuggest === 'suggest'){
+              APP.fetchSimilarMovies(APP.movieId);
+              console.log('no data in DB we will call fetch similar');
+            } 
           
         }else{
             console.log('Data found in DB');
-            APP.navigate(`./search-results.html?keyword=${APP.queryMovie}`);
+            // APP.navigate(`./search-results.html?keyword=${APP.keyword}`);
+
+            APP.navigate(APP.nextPage);
           
         }
   },
 
-  checkInDB:(keyword, callBack)=>{
-    let tx = APP.DB.transaction('searchStore', 'readwrite');
+  checkInDB:(keyword, store, callBack)=>{
+    let tx = APP.DB.transaction(store, 'readwrite');
     tx.onerror = (err) => {
       console.log('failed to successfully run the transaction');
     };
@@ -106,10 +119,9 @@ const APP = {
       console.log('finished the transaction... wanna do something else');
       callBack();
     };
-    let searchStore = tx.objectStore('searchStore');
-    // console.log(searchStore);
-    let searchWord = keyword;
-    let getRequest = searchStore.get(searchWord);
+    let objStore = tx.objectStore(store);
+    
+    let getRequest = objStore.get(keyword);
     getRequest.onerror = (err) => {
       //error with get request... will trigger the tx.onerror too
     };
@@ -119,15 +131,7 @@ const APP = {
       }
     };
     
-  },
-
-  findInDBorFetch: (keyword)=>{
-       //do search in db for match after clicking search link
-      // console.log(`check db for ${keyword}`);
-      // APP.getMatch(keyword);
-       //this will trigger the `complete` event that will call matchFound
-      //  window.addEventListener('complete', APP.dbMatchResults, {once:true}); //after doing a search in db
-  }, 
+  },  
 
   getResultsFromDB:(keyword) =>{
 
@@ -175,11 +179,11 @@ const APP = {
     })
   },
 
-  getMovies: (searchString) => {
-    let urlMovie =` https://api.themoviedb.org/3/search/movie?api_key=${APP.APIKEY}&query=${searchString}`;
-    APP.fetchMovies(urlMovie);
+  // getMovies: (searchString) => {
+  //   // let urlMovie =` https://api.themoviedb.org/3/search/movie?api_key=${APP.APIKEY}&query=${searchString}`;
+  //   // APP.fetchMovies(urlMovie);
 
-  },
+  // },
 
   fetchMovies: (queryString) => {
     let url = `https://api.themoviedb.org/3/search/movie?api_key=${APP.APIKEY}&query=${queryString}`
@@ -192,24 +196,24 @@ const APP = {
                
                 let searchResults = {keyword:queryString, results:data.results};
                 console.log(`This is the value of searchResults: ${searchResults}`);
-                // APP.displayMovies(APP.results);
+                let searchStore = 'searchStore';
               
-                APP.saveToDb(searchResults);
+                APP.saveToDb(searchResults, searchStore);
                               
               }).catch(err => {
                 alert(err);
               })
   },
 
-  saveToDb: (searchResults) => {
-    let tx = APP.DB.transaction('searchStore', 'readwrite');
+  saveToDb: (searchResults, store) => {
+    let tx = APP.DB.transaction(store, 'readwrite');
     tx.oncomplete = function(ev) {
       
     };
     tx.onerror = function(ev){
       console.log('Can not finish the transaction');
     };
-    let movieStore = tx.objectStore('searchStore');
+    let movieStore = tx.objectStore(store);
     let addRequest = movieStore.add(searchResults);
     addRequest.onerror = function(err){
       console.warn('Failed to add', err.message);
@@ -218,7 +222,8 @@ const APP = {
     addRequest.onsuccess = function(ev){
       console.log(ev.target.result);
       console.log('insertion succeeded');
-      APP.navigate(`./search-results.html?keyword=${APP.queryMovie}`);
+      // APP.navigate(`./search-results.html?keyword=${APP.keyword}`);
+      APP.navigate(APP.nextPage);
     };
   },
 
@@ -237,16 +242,13 @@ const APP = {
       let url = new URL(window.location.href);
             let params = url.searchParams;
             
-            APP.queryMovie = params.get('keyword');
-            console.log(`the keyword is: ${APP.queryMovie}`);          
+            APP.keyword = params.get('keyword');
+            console.log(`the keyword is: ${APP.keyword}`);          
             setTimeout(()=>{
               // console.log(APP.DB);
-              APP.getResultsFromDB(APP.queryMovie);
-            },1000);
-            
-            // APP.getResultsFromDB(APP.queryMovie);      
-        // APP.getMovies(APP.keyword[0]);
-      
+              APP.getResultsFromDB(APP.keyword);
+            },1000);            
+                
     }
     if(document.body.id === 'suggest'){
         //on the suggest page
@@ -276,89 +278,106 @@ const APP = {
         //on the 404 page
         console.log('We are on the 404 page');
     }
-},
+  },
 
-getSimilarMovies: (movieId) => {
+  getSimilarMovies: (movieId) => {
   console.log('inside getSimilarMovies');
   // let urlMovie =` https://api.themoviedb.org/3/search/movie?api_key=${APP.APIKEY}&query=${searchString}`;
   let urlMovie =`https://api.themoviedb.org/3/movie/${movieId}/similar?api_key=${APP.APIKEY}`;
   APP.fetchSimilarMovies(urlMovie);
-},
+  },
 
-fetchSimilarMovies: (url) => {
-  console.log('inside fetch similar movies')
+  fetchSimilarMovies: (id) => {
+  console.log(`inside fetch similar movies the movieId is ${id}`);
+  let url =`https://api.themoviedb.org/3/movie/${id}/similar?api_key=${APP.APIKEY}`;
   fetch(url)
   .then(response => {
     return response.json();
   }).then(data => {
-    // APP.actorsArr = data.results;
-    // localStorage.setItem(APP.queryActor, JSON.stringify(APP.actorsArr));
-    /** The function fetchActor is using the displayCards function to display the info of 
-     * the actors(photo, name and a number of stars emoji based on his popularity)
-     * 
-     */
-    // DISPLAY.displayCards(APP.actorsArr, 'actor');
-    APP.results = data.results;
-    // console.log(data);
-    console.log(APP.results);
-    APP.displayMovies(APP.results);
-  
-    
-    
+
+    console.log(data.results);              
+   
+    let searchResults = {movieId:id, results:data.results};
+    console.log(`This is the value of searchResults: ${searchResults}`);
+   
+    let suggestedStore = 'suggestedStore';
+    APP.saveToDb(searchResults, suggestedStore);
+                  
   }).catch(err => {
-    alert('something wrong happened'+ err);
+    alert(err);
   })
-},
 
-displayMovies: (arr) => {
-
-  let df = document.createDocumentFragment();
-
-  arr.forEach(item => {
-    let posterPath = item.poster_path;
+  // fetch(url)
+  // .then(response => {
+  //   return response.json();
+  // }).then(data => {
+    
+  //   APP.results = data.results;
   
-    if(posterPath !== null){ 
-        let imgPath = APP.secureBaseUrl + APP.posterSize + posterPath; 
+  //   console.log(APP.results);
+  //   APP.displayMovies(APP.results);
+  
+    
+    
+  // }).catch(err => {
+  //   alert('something wrong happened'+ err);
+  // })
+  },
 
-        let card = document.createElement('div');
-        card.classList.add('card');
-        card.setAttribute('data-movie-id', item.id);
+  displayMovies: (arr) => {
 
-        let imgWrap = document.createElement('div');
-        imgWrap.classList.add('img-wrap');
+    let df = document.createDocumentFragment();
 
-        let img = document.createElement('img');
-        img.setAttribute('src', imgPath);
+    arr.forEach(item => {
+      let posterPath = item.poster_path;
+    
+      if(posterPath !== null){ 
+          let imgPath = APP.secureBaseUrl + APP.posterSize + posterPath; 
 
-        let contentWrap = document.createElement('div');
-        contentWrap.classList.add('content-wrap');
+          let card = document.createElement('div');
+          card.classList.add('card');
+          card.setAttribute('data-movie-id', item.id);
 
-        let movieTitle = document.createElement('p');
-        movieTitle.textContent = item.title;
+          let imgWrap = document.createElement('div');
+          imgWrap.classList.add('img-wrap');
 
-        let linkToSimilar = document.createElement('p');
-        linkToSimilar.innerHTML = `<span> Similar movies </span>`;
+          let img = document.createElement('img');
+          img.setAttribute('src', imgPath);
+
+          let contentWrap = document.createElement('div');
+          contentWrap.classList.add('content-wrap');
+
+          let movieTitle = document.createElement('p');
+          movieTitle.textContent = item.title;
+
+          let linkToSimilar = document.createElement('p');
+          linkToSimilar.innerHTML = `<span> Similar movies </span>`;
 
 
-        contentWrap.appendChild(movieTitle);
-        contentWrap.appendChild(linkToSimilar);
+          contentWrap.appendChild(movieTitle);
+          contentWrap.appendChild(linkToSimilar);
 
-        imgWrap.appendChild(img);
-        card.appendChild(imgWrap);
-        card.appendChild(contentWrap);
+          imgWrap.appendChild(img);
+          card.appendChild(imgWrap);
+          card.appendChild(contentWrap);
 
-        df.appendChild(card);
-    }
-  });
-  APP.cards.append(df);
-},
+          df.appendChild(card);
+      }
+    });
+    APP.cards.append(df);
+  },
 
-handleClickMovie: (ev) => {
-  // I need to pass the id of the movie along with the keyword to the suggested-results page
-let movieId = ev.target.closest('.card').getAttribute('data-movie-id');
-APP.navigate(`./suggested-movies.html?keyword=${APP.queryMovie}&movieId=${movieId}`);
+  handleClickMovie: (ev) => {
+    // I need to pass the id of the movie along with the keyword to the suggested-results page
+    APP.movieId = ev.target.closest('.card').getAttribute('data-movie-id');
+    let suggestedStore = 'suggestedStore';
+    APP.nextPage = `./suggested-movies.html?keyword=${APP.keyword}&movieId=${APP.movieId}`;
+    APP.searchOrSuggest = 'suggest';
+  
+  APP.checkInDB(APP.movieId, suggestedStore, APP.decideAfter);
+  // APP.navigate(`./suggested-movies.html?keyword=${APP.keyword}&movieId=${movieId}`);
 
-},
+  },
 
 
 };
