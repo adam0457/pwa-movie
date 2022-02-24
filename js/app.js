@@ -74,30 +74,37 @@ const APP = {
     ev.preventDefault();
     APP.queryMovie = APP.inputName.value.trim();
     if(APP.queryMovie !== ''){
-      APP.findInDBorFetch(APP.queryMovie);
-      // APP.navigate(`http://127.0.0.1:5500/search-results.html?keyword=${APP.queryMovie}`); 
+      // APP.findInDBorFetch(APP.queryMovie);
+      // APP.checkInDB(APP.queryMovie);
+      APP.checkInDB(APP.queryMovie, APP.decideAfter); 
     }
     else {alert('You did not enter anything')}
   
     APP.inputName.value = '';  
   },
 
-  findInDBorFetch: (keyword)=>{
-       //do search in db for match after clicking search link
-      console.log(`check db for ${keyword}`);
-      APP.getMatch(keyword);
-       //this will trigger the `complete` event that will call matchFound
-       window.addEventListener('complete', APP.dbMatchResults, {once:true}); //after doing a search in db
+  decideAfter:()=>{
+        // console.log(APP.results);
+
+        if(APP.results.length === 0){          
+          APP.fetchMovies(APP.queryMovie)
+          console.log('no data in DB');
+          
+        }else{
+            console.log('Data found in DB');
+            APP.navigate(`./search-results.html?keyword=${APP.queryMovie}`);
+          
+        }
   },
 
-  getMatch:(keyword)=>{
-        
+  checkInDB:(keyword, callBack)=>{
     let tx = APP.DB.transaction('searchStore', 'readwrite');
     tx.onerror = (err) => {
       console.log('failed to successfully run the transaction');
     };
     tx.oncomplete = (ev) => {
       console.log('finished the transaction... wanna do something else');
+      callBack();
     };
     let searchStore = tx.objectStore('searchStore');
     // console.log(searchStore);
@@ -107,17 +114,20 @@ const APP = {
       //error with get request... will trigger the tx.onerror too
     };
     getRequest.onsuccess = (ev) => {
-      let res;
-      let obj = getRequest.result;
-      if(obj){
-        res = obj.results;
-      }else{
-        res=[];
-      }            
-      console.log(res);
-      window.dispatchEvent( APP.oncomplete(res) );
+      if(getRequest.result){
+        APP.results = getRequest.result.results;
+      }
     };
+    
   },
+
+  findInDBorFetch: (keyword)=>{
+       //do search in db for match after clicking search link
+      // console.log(`check db for ${keyword}`);
+      // APP.getMatch(keyword);
+       //this will trigger the `complete` event that will call matchFound
+      //  window.addEventListener('complete', APP.dbMatchResults, {once:true}); //after doing a search in db
+  }, 
 
   getResultsFromDB:(keyword) =>{
 
@@ -141,30 +151,7 @@ const APP = {
       APP.displayMovies(result);
       
     };
-  },
-
-
-  oncomplete: (res) => {   
-    return new CustomEvent('complete', {detail: {results: res}});
-  },
-
-  dbMatchResults:(ev)=>{     
-    
-      console.log(`results from db ${ev.detail.results}`);
-      APP.dataList = ev.detail.results;
-
-      // console.log(`the keyword is: ${APP.queryMovie}`);
-     
-      if(APP.dataList.length === 0){
-           //need to do fetch
-        APP.fetchMovies(APP.queryMovie)
-                
-      }else{
-           //there is a match so navigate
-          APP.navigate(`./search-results.html?keyword=${APP.queryMovie}`);
-        
-      }
-  },
+  },   
 
   getConfig: () => {
     fetch(APP.urlConfig)
