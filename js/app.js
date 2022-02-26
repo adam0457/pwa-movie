@@ -24,6 +24,7 @@ const APP = {
     dataList:null,
     nextPage:null,
     searchOrSuggest:null,
+    theBlob:null,
     // obj:null,
 
     /** variables for the dB */
@@ -152,7 +153,8 @@ const APP = {
     };
     getRequest.onsuccess = (ev) => {
       let result = getRequest.result.results;
-      APP.displayMovies(result);
+      // APP.displayMovies(result);
+      APP.displayMoviesImgFromCache(result);
       
     };
   },   
@@ -365,6 +367,100 @@ const APP = {
   // }).catch(err => {
   //   alert('something wrong happened'+ err);
   // })
+  },
+
+  myFunc:(imgPath)=>{
+    let options = {
+      ignoreSearch: true, //ignore the queryString
+      ignoreMethod: true, //ignore the method - POST, GET, etc
+      ignoreVary: false, //ignore if the response has a VARY header
+    };
+    // let req = 'https://image.tmdb.org/t/p/original/iieEddHTv5zzTyr7OnN5ULOu7bI.jpg';
+    caches.match(imgPath, options)
+    .then((response) => {
+            return response.blob();
+      
+    }).then((blob) => {
+      APP.theBlob = blob;
+    })
+    .catch((err) => {
+      console.warn(err.message);
+    });
+  },
+
+  functionTest:async(arr, i, df)=>{
+
+    let options = {
+      ignoreSearch: true, //ignore the queryString
+      ignoreMethod: true, //ignore the method - POST, GET, etc
+      ignoreVary: false, //ignore if the response has a VARY header
+    };
+    let item = arr[i];
+    // console.log(item);
+    let posterPath = item.poster_path;
+    
+      if(posterPath !== null){ 
+          let imgPath = APP.secureBaseUrl + APP.posterSize + posterPath;
+          console.log(imgPath);
+          let response = await caches.match(imgPath, options);
+          APP.theBlob = await response.blob();
+          // console.log(APP.theBlob);
+          let card = document.createElement('div');
+          card.classList.add('card');
+          card.setAttribute('data-movie-id', item.id);
+
+          let imgWrap = document.createElement('div');
+          imgWrap.classList.add('img-wrap');
+
+          let url = URL.createObjectURL(APP.theBlob);
+          let img = document.createElement('img');
+          // img.setAttribute('src', imgPath);
+          img.setAttribute('src', url);
+          let contentWrap = document.createElement('div');
+          contentWrap.classList.add('content-wrap');
+
+          let movieTitle = document.createElement('p');
+          movieTitle.textContent = item.title;
+
+          let linkToSimilar = document.createElement('p');
+          linkToSimilar.innerHTML = `<span> Similar movies </span>`;
+
+
+          contentWrap.appendChild(movieTitle);
+          contentWrap.appendChild(linkToSimilar);
+
+          imgWrap.appendChild(img);
+          card.appendChild(imgWrap);
+          card.appendChild(contentWrap);
+
+          df.appendChild(card);
+          APP.cards.append(df);
+
+          i++;
+          if(i <= arr.length){
+            APP.functionTest(arr,i, df)
+          }
+      }
+    
+  },
+
+  displayMoviesImgFromCache:(arr)=>{
+    let df = document.createDocumentFragment();
+
+    let i = 0;
+    console.log(arr.length);
+    APP.functionTest(arr,i, df) 
+    // if(i <= arr.length){     
+    //   i++;
+    //   console.log(i);
+    //   APP.functionTest(arr[i], df) 
+    // }
+
+    // console.log(df);
+    // arr.forEach(item => {
+    //   APP.functionTest(item, df);  
+    // });
+    // APP.cards.append(df);
   },
 
   displayMovies: (arr) => {
