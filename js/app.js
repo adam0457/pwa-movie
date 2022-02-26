@@ -90,7 +90,7 @@ const APP = {
   },
 
   decideAfter:()=>{
-        console.log(APP.results);
+        // console.log(APP.results);
 
         if(APP.results.length === 0){ 
             if(APP.searchOrSuggest === 'search'){
@@ -192,20 +192,70 @@ const APP = {
                 return response.json();
               }).then(data => {
 
-                console.log(data.results);              
-               
-                let searchResults = {keyword:queryString, results:data.results};
-                console.log(`This is the value of searchResults: ${searchResults}`);
-                let searchStore = 'searchStore';
+                //console.log(`Data from the fetch: ${data.results[0].poster_path}`);              
               
-                APP.saveToDb(searchResults, searchStore);
+                let searchResults = {keyword:queryString, results:data.results};
+                // console.log(`This is the value of searchResults: ${searchResults}`);
+                let searchStore = 'searchStore';
+                let images =  APP.createArrImages(data.results);
+                // console.log(images);
+                let imagesTest = ["https://image.tmdb.org/t/p/original/IwrDPrB4d2DMcpnGkvan46yINL.jpg",
+                                  "https://image.tmdb.org/t/p/original/6qzFNzWtgc7nH4j4I6odnoJP66H.jpg",
+                                  "https://image.tmdb.org/t/p/original/iM2uWkC1BklUQiFcrZCQGSkZxeq.jpg",
+                                  "https://image.tmdb.org/t/p/original/hr4JGvW3JJm5VnmuVl7BMNK5PRf.jpg",
+                                  "https://image.tmdb.org/t/p/original/sM9YZqppgCfVtFRX1eAgaaeaJQx.jpg",
+                                  "https://image.tmdb.org/t/p/original/rBqEYHCv9DI2Wk3JjsuG4YQSLT4.jpg"
+                                ];
+                // setTimeout(APP.putImagesInCache('https://image.tmdb.org/t/p/original/IwrDPrB4d2DMcpnGkvan46yINL.jpg'),1000);
+                // APP.putImagesInCache('https://image.tmdb.org/t/p/original/IwrDPrB4d2DMcpnGkvan46yINL.jpg');
+                APP.putImagesInCache(images);
+                setTimeout(()=>{
+                  APP.saveToDb(searchResults, searchStore);
+                },1000); 
+                // APP.saveToDb(searchResults, searchStore);
                               
               }).catch(err => {
                 alert(err);
               })
   },
 
+  putImagesInCache:(images)=>{
+    console.log(`The images: ${images}`)
+    caches
+      .open('imagesCacheTest-v1')
+      .then((cache) => {
+        // let urlString = '/img/1011-800x600.jpg?id=one';
+        // cache.add(urlString); //add = fetch + put
+
+        // let url = new URL(images);
+        // cache.add(url);
+
+        // let req = new Request('/img/1011-800x600.jpg?id=three');
+        // cache.add(req);
+
+        cache.addAll(images).then(img=>{console.log('Images put in cache')}).catch(err=>{console.log(err)}) //is an alternative that lets you save a list
+      })
+      .catch((err) => {
+        //the open method failed.
+      });
+  },
+
+  createArrImages:(data)=>{
+    console.log(` Data inside the createArrImages function: ${data}`);
+    let moviesWithPoster = data.filter((element) => element.poster_path !== null);
+    let ArrImages = moviesWithPoster.map(movie => {
+        if(movie.poster_path!== null){
+          let poster = APP.secureBaseUrl + APP.posterSize + movie.poster_path;
+          return poster;
+        }  
+  })
+    
+    return ArrImages;
+  },
+
   saveToDb: (searchResults, store) => {
+    // console.log(` Data inside the saveToDb function: ${searchResults.results}`);
+
     let tx = APP.DB.transaction(store, 'readwrite');
     tx.oncomplete = function(ev) {
       
@@ -222,7 +272,6 @@ const APP = {
     addRequest.onsuccess = function(ev){
       console.log(ev.target.result);
       console.log('insertion succeeded');
-      // APP.navigate(`./search-results.html?keyword=${APP.keyword}`);
       APP.navigate(APP.nextPage);
     };
   },
@@ -326,8 +375,8 @@ const APP = {
       let posterPath = item.poster_path;
     
       if(posterPath !== null){ 
-          let imgPath = APP.secureBaseUrl + APP.posterSize + posterPath; 
-
+          let imgPath = APP.secureBaseUrl + APP.posterSize + posterPath;
+          //console.log(imgPath); 
           let card = document.createElement('div');
           card.classList.add('card');
           card.setAttribute('data-movie-id', item.id);
