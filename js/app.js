@@ -96,14 +96,14 @@ const APP = {
         if(APP.results.length === 0){ 
             if(APP.searchOrSuggest === 'search'){
               APP.fetchMovies(APP.keyword)
-              console.log('no data in DB we will call fetch movies');
+              // console.log('no data in DB we will call fetch movies');
             } else if(APP.searchOrSuggest === 'suggest'){
               APP.fetchSimilarMovies(APP.movieId);
-              console.log('no data in DB we will call fetch similar');
+              // console.log('no data in DB we will call fetch similar');
             } 
           
         }else{
-            console.log('Data found in DB');
+            // console.log('Data found in DB');
             // APP.navigate(`./search-results.html?keyword=${APP.keyword}`);
 
             APP.navigate(APP.nextPage);
@@ -152,9 +152,11 @@ const APP = {
     
     };
     getRequest.onsuccess = (ev) => {
-      let result = getRequest.result.results;
-      // APP.displayMovies(result);
-      APP.displayMoviesImgFromCache(result);
+      if(getRequest.result){
+        let result = getRequest.result.results;
+        APP.displayResults(result);
+      }
+      
       
     };
   },   
@@ -181,40 +183,21 @@ const APP = {
     })
   },
 
-  // getMovies: (searchString) => {
-  //   // let urlMovie =` https://api.themoviedb.org/3/search/movie?api_key=${APP.APIKEY}&query=${searchString}`;
-  //   // APP.fetchMovies(urlMovie);
-
-  // },
-
   fetchMovies: (queryString) => {
     let url = `https://api.themoviedb.org/3/search/movie?api_key=${APP.APIKEY}&query=${queryString}`
     fetch(url)
               .then(response => {
                 return response.json();
-              }).then(data => {
-
-                //console.log(`Data from the fetch: ${data.results[0].poster_path}`);              
+              }).then(data => {                          
               
                 let searchResults = {keyword:queryString, results:data.results};
-                // console.log(`This is the value of searchResults: ${searchResults}`);
                 let searchStore = 'searchStore';
-                let images =  APP.createArrImages(data.results);
-                // console.log(images);
-                let imagesTest = ["https://image.tmdb.org/t/p/original/IwrDPrB4d2DMcpnGkvan46yINL.jpg",
-                                  "https://image.tmdb.org/t/p/original/6qzFNzWtgc7nH4j4I6odnoJP66H.jpg",
-                                  "https://image.tmdb.org/t/p/original/iM2uWkC1BklUQiFcrZCQGSkZxeq.jpg",
-                                  "https://image.tmdb.org/t/p/original/hr4JGvW3JJm5VnmuVl7BMNK5PRf.jpg",
-                                  "https://image.tmdb.org/t/p/original/sM9YZqppgCfVtFRX1eAgaaeaJQx.jpg",
-                                  "https://image.tmdb.org/t/p/original/rBqEYHCv9DI2Wk3JjsuG4YQSLT4.jpg"
-                                ];
-                // setTimeout(APP.putImagesInCache('https://image.tmdb.org/t/p/original/IwrDPrB4d2DMcpnGkvan46yINL.jpg'),1000);
-                // APP.putImagesInCache('https://image.tmdb.org/t/p/original/IwrDPrB4d2DMcpnGkvan46yINL.jpg');
+                let images =  APP.createArrImages(data.results);                
                 APP.putImagesInCache(images);
                 setTimeout(()=>{
                   APP.saveToDb(searchResults, searchStore);
                 },1000); 
-                // APP.saveToDb(searchResults, searchStore);
+                
                               
               }).catch(err => {
                 alert(err);
@@ -222,20 +205,11 @@ const APP = {
   },
 
   putImagesInCache:(images)=>{
-    console.log(`The images: ${images}`)
+    // console.log(`The images: ${images}`)
     caches
       .open('imagesCacheTest-v1')
       .then((cache) => {
-        // let urlString = '/img/1011-800x600.jpg?id=one';
-        // cache.add(urlString); //add = fetch + put
-
-        // let url = new URL(images);
-        // cache.add(url);
-
-        // let req = new Request('/img/1011-800x600.jpg?id=three');
-        // cache.add(req);
-
-        cache.addAll(images).then(img=>{console.log('Images put in cache')}).catch(err=>{console.log(err)}) //is an alternative that lets you save a list
+        cache.addAll(images).then(img=>{console.log('Images put in cache')}).catch(err=>{console.log(err)}) 
       })
       .catch((err) => {
         //the open method failed.
@@ -325,13 +299,6 @@ const APP = {
     }
   },
 
-  getSimilarMovies: (movieId) => {
-  console.log('inside getSimilarMovies');
-  // let urlMovie =` https://api.themoviedb.org/3/search/movie?api_key=${APP.APIKEY}&query=${searchString}`;
-  let urlMovie =`https://api.themoviedb.org/3/movie/${movieId}/similar?api_key=${APP.APIKEY}`;
-  APP.fetchSimilarMovies(urlMovie);
-  },
-
   fetchSimilarMovies: (id) => {
   console.log(`inside fetch similar movies the movieId is ${id}`);
   let url =`https://api.themoviedb.org/3/movie/${id}/similar?api_key=${APP.APIKEY}`;
@@ -346,49 +313,22 @@ const APP = {
     console.log(`This is the value of searchResults: ${searchResults}`);
    
     let suggestedStore = 'suggestedStore';
-    APP.saveToDb(searchResults, suggestedStore);
+
+    let images =  APP.createArrImages(data.results);                
+    APP.putImagesInCache(images);
+    setTimeout(()=>{
+    
+      APP.saveToDb(searchResults, suggestedStore);
+    },1000);
                   
   }).catch(err => {
     alert(err);
   })
 
-  // fetch(url)
-  // .then(response => {
-  //   return response.json();
-  // }).then(data => {
-    
-  //   APP.results = data.results;
-  
-  //   console.log(APP.results);
-  //   APP.displayMovies(APP.results);
-  
-    
-    
-  // }).catch(err => {
-  //   alert('something wrong happened'+ err);
-  // })
+
   },
 
-  myFunc:(imgPath)=>{
-    let options = {
-      ignoreSearch: true, //ignore the queryString
-      ignoreMethod: true, //ignore the method - POST, GET, etc
-      ignoreVary: false, //ignore if the response has a VARY header
-    };
-    // let req = 'https://image.tmdb.org/t/p/original/iieEddHTv5zzTyr7OnN5ULOu7bI.jpg';
-    caches.match(imgPath, options)
-    .then((response) => {
-            return response.blob();
-      
-    }).then((blob) => {
-      APP.theBlob = blob;
-    })
-    .catch((err) => {
-      console.warn(err.message);
-    });
-  },
-
-  functionTest:async(arr, i, df)=>{
+  buildPosterCards:async(arr, i, df)=>{
 
     let options = {
       ignoreSearch: true, //ignore the queryString
@@ -438,29 +378,18 @@ const APP = {
 
           i++;
           if(i <= arr.length){
-            APP.functionTest(arr,i, df)
+            APP.buildPosterCards(arr,i, df)
           }
       }
     
   },
 
-  displayMoviesImgFromCache:(arr)=>{
+  displayResults:(arr)=>{
     let df = document.createDocumentFragment();
-
     let i = 0;
     console.log(arr.length);
-    APP.functionTest(arr,i, df) 
-    // if(i <= arr.length){     
-    //   i++;
-    //   console.log(i);
-    //   APP.functionTest(arr[i], df) 
-    // }
-
-    // console.log(df);
-    // arr.forEach(item => {
-    //   APP.functionTest(item, df);  
-    // });
-    // APP.cards.append(df);
+    APP.buildPosterCards(arr,i, df) 
+  
   },
 
   displayMovies: (arr) => {
