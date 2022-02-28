@@ -11,15 +11,15 @@ const cacheList = [
   '/404.html',
   '/css/main.css',
   '/js/app.js',
-  // '/manifest.json',  
+  '/manifest.json',  
   //TODO: add all the icons from the img folder
-  // 'favicon.ico',
-  // '/img/android-chrome-192x192.png',
-  // '/img/android-chrome-512x512.png',
-  // '/img/apple-touch-icon.png',
-  // '/img/favicon-16x16.png',
-  // '/img/favicon-32x32.png',
-  // '/img/mstile-150x150.png',
+  'favicon.ico',
+  '/img/android-chrome-192x192.png',
+  '/img/android-chrome-512x512.png',
+  '/img/apple-touch-icon.png',
+  '/img/favicon-16x16.png',
+  '/img/favicon-32x32.png',
+  '/img/mstile-150x150.png',
   //TODO: add a google font in your css and here
   'https://fonts.googleapis.com/css2?family=Roboto:ital@0;1&display=swap'
   //TODO: if you add any other JS files include them here
