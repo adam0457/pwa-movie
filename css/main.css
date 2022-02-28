@@ -36,6 +36,10 @@ h5 {font-size: 1.25rem;}
 
 small, .text_small {font-size: 0.8rem;}
 
+a {
+  text-decoration: none;
+}
+
 /* body {
   box-sizing: border-box;
   margin: 0;
