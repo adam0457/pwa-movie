@@ -21,6 +21,7 @@ const APP = {
     results:[],
     keyword:null,
     movieId:null,
+    movieTitle:null,
     dataList:null,
     nextPage:null,
     searchOrSuggest:null,
@@ -269,7 +270,9 @@ const APP = {
             
             APP.keyword = params.get('keyword');
             let searchStore = 'searchStore';
-            console.log(`the keyword is: ${APP.keyword}`);          
+            // console.log(`the keyword is: ${APP.keyword}`); 
+            let showResults = document.getElementById('show-results');
+            showResults.textContent = ` "${APP.keyword}"`;        
             setTimeout(()=>{
               // console.log(APP.DB);
               APP.getResultsFromDB(APP.keyword, searchStore);
@@ -281,11 +284,14 @@ const APP = {
         let url = new URL(window.location.href);
             let params = url.searchParams;
             
-            APP.keyword = params.get('keyword');
             APP.movieId = params.get('movieId');
+            APP.movieTitle = params.get('movieTitle');
+
+            let showSimilar = document.getElementById('show-similar');
+            showSimilar.textContent = ` "${APP.movieTitle}"`;  
             
-            console.log(`the keyword is: ${APP.keyword}`); 
-            console.log(`the movieId is: ${APP.movieId}`); 
+            // console.log(`the keyword is: ${APP.keyword}`); 
+            // console.log(`the movieId is: ${APP.movieId}`); 
             let suggestedStore = 'suggestedStore';
             setTimeout(()=>{
               // console.log(APP.DB);
@@ -295,7 +301,7 @@ const APP = {
     }
     if(document.body.id === 'fourohfour'){
         //on the 404 page
-        console.log('We are on the 404 page');
+        // console.log('We are on the 404 page');
     }
   },
 
@@ -338,9 +344,9 @@ const APP = {
           APP.theBlob = await response.blob();
           // console.log(APP.theBlob);
           let card = document.createElement('div');
-          card.classList.add('card');
+          card.classList.add('card');          
           card.setAttribute('data-movie-id', item.id);
-
+          card.setAttribute('data-movie-title', item.title);
           let imgWrap = document.createElement('div');
           imgWrap.classList.add('img-wrap');
 
@@ -384,54 +390,56 @@ const APP = {
   
   },
 
-  displayMovies: (arr) => {
+  // displayMovies: (arr) => {
 
-    let df = document.createDocumentFragment();
+  //   let df = document.createDocumentFragment();
 
-    arr.forEach(item => {
-      let posterPath = item.poster_path;
+  //   arr.forEach(item => {
+  //     let posterPath = item.poster_path;
     
-      if(posterPath !== null){ 
-          let imgPath = APP.secureBaseUrl + APP.posterSize + posterPath;
-          //console.log(imgPath); 
-          let card = document.createElement('div');
-          card.classList.add('card');
-          card.setAttribute('data-movie-id', item.id);
+  //     if(posterPath !== null){ 
+  //         let imgPath = APP.secureBaseUrl + APP.posterSize + posterPath;
+  //         //console.log(imgPath); 
+  //         let card = document.createElement('div');
+  //         card.classList.add('card');
+  //         card.setAttribute('data-movie-id', item.id);
 
-          let imgWrap = document.createElement('div');
-          imgWrap.classList.add('img-wrap');
+  //         let imgWrap = document.createElement('div');
+  //         imgWrap.classList.add('img-wrap');
 
-          let img = document.createElement('img');
-          img.setAttribute('src', imgPath);
+  //         let img = document.createElement('img');
+  //         img.setAttribute('src', imgPath);
 
-          let contentWrap = document.createElement('div');
-          contentWrap.classList.add('content-wrap');
+  //         let contentWrap = document.createElement('div');
+  //         contentWrap.classList.add('content-wrap');
 
-          let movieTitle = document.createElement('p');
-          movieTitle.textContent = item.title;
+  //         let movieTitle = document.createElement('p');
+  //         movieTitle.textContent = item.title;
 
-          let linkToSimilar = document.createElement('p');
-          linkToSimilar.innerHTML = `<span> Similar movies </span>`;
+  //         let linkToSimilar = document.createElement('p');
+  //         linkToSimilar.innerHTML = `<span> Similar movies </span>`;
 
 
-          contentWrap.appendChild(movieTitle);
-          contentWrap.appendChild(linkToSimilar);
+  //         contentWrap.appendChild(movieTitle);
+  //         contentWrap.appendChild(linkToSimilar);
 
-          imgWrap.appendChild(img);
-          card.appendChild(imgWrap);
-          card.appendChild(contentWrap);
+  //         imgWrap.appendChild(img);
+  //         card.appendChild(imgWrap);
+  //         card.appendChild(contentWrap);
 
-          df.appendChild(card);
-      }
-    });
-    APP.cards.append(df);
-  },
+  //         df.appendChild(card);
+  //     }
+  //   });
+  //   APP.cards.append(df);
+  // },
 
   handleClickMovie: (ev) => {
     // I need to pass the id of the movie along with the keyword to the suggested-results page
     APP.movieId = ev.target.closest('.card').getAttribute('data-movie-id');
+    APP.movieTitle = ev.target.closest('.card').getAttribute('data-movie-title');
     let suggestedStore = 'suggestedStore';
-    APP.nextPage = `./suggested-movies.html?keyword=${APP.keyword}&movieId=${APP.movieId}`;
+    // APP.nextPage = `./suggested-movies.html?keyword=${APP.keyword}&movieId=${APP.movieId}`;
+    APP.nextPage = `./suggested-movies.html?movieId=${APP.movieId}&movieTitle=${APP.movieTitle}`;
     APP.searchOrSuggest = 'suggest';
   
   APP.checkInDB(APP.movieId, suggestedStore, APP.decideAfter);

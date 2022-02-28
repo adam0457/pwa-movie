@@ -1,4 +1,4 @@
-const version = 9;
+const version = 10;
 //let isOnline = true; //will get updated via messaging
 const staticCache = `pwaEx3StaticCache${version}`;
 // const dynamicCache = 'imagesCacheTest-v1';
