@@ -40,11 +40,18 @@ const APP = {
     APP.APIKEY = '75789c3f5ba1cec6147292baa65a1ecc';
     APP.urlConfig = `https://api.themoviedb.org/3/configuration?api_key=75789c3f5ba1cec6147292baa65a1ecc`;
 
+    APP.registerSW();
     APP.initDb();
     APP.getConfig();    
     APP.addListeners();
     APP.pageSpecific();
-   
+  
+  },
+
+  registerSW: () => {
+    navigator.serviceWorker.register('/sw.js').catch(function (err) {
+      console.warn(err);
+    });
   },
 
   addListeners: () => {
@@ -192,11 +199,9 @@ const APP = {
               
                 let searchResults = {keyword:queryString, results:data.results};
                 let searchStore = 'searchStore';
-                let images =  APP.createArrImages(data.results);                
-                APP.putImagesInCache(images);
-                setTimeout(()=>{
-                  APP.saveToDb(searchResults, searchStore);
-                },1000); 
+                let images =  APP.createArrImages(data.results); 
+                              
+                APP.putInCacheAndDB(images, searchResults, searchStore );
                 
                               
               }).catch(err => {
@@ -204,20 +209,15 @@ const APP = {
               })
   },
 
-  putImagesInCache:(images)=>{
-    // console.log(`The images: ${images}`)
-    caches
-      .open('imagesCacheTest-v1')
-      .then((cache) => {
-        cache.addAll(images).then(img=>{console.log('Images put in cache')}).catch(err=>{console.log(err)}) 
-      })
-      .catch((err) => {
-        //the open method failed.
-      });
+  putInCacheAndDB: async (images, searchResults, store)=>{
+        let response = await caches.open('imagesCacheTest-v1');
+        let cache = await response.addAll(images);
+        APP.saveToDb(searchResults, store);
+
   },
 
   createArrImages:(data)=>{
-    console.log(` Data inside the createArrImages function: ${data}`);
+    // console.log(` Data inside the createArrImages function: ${data}`);
     let moviesWithPoster = data.filter((element) => element.poster_path !== null);
     let ArrImages = moviesWithPoster.map(movie => {
         if(movie.poster_path!== null){
@@ -300,27 +300,19 @@ const APP = {
   },
 
   fetchSimilarMovies: (id) => {
-  console.log(`inside fetch similar movies the movieId is ${id}`);
+  // console.log(`inside fetch similar movies the movieId is ${id}`);
   let url =`https://api.themoviedb.org/3/movie/${id}/similar?api_key=${APP.APIKEY}`;
   fetch(url)
   .then(response => {
     return response.json();
   }).then(data => {
-
-    console.log(data.results);              
-   
-    let searchResults = {movieId:id, results:data.results};
-    console.log(`This is the value of searchResults: ${searchResults}`);
-   
+      
+      let searchResults = {movieId:id, results:data.results};
+  
     let suggestedStore = 'suggestedStore';
-
-    let images =  APP.createArrImages(data.results);                
-    APP.putImagesInCache(images);
-    setTimeout(()=>{
-    
-      APP.saveToDb(searchResults, suggestedStore);
-    },1000);
-                  
+    let images =  APP.createArrImages(data.results); 
+    APP.putInCacheAndDB(images, searchResults, suggestedStore );
+  
   }).catch(err => {
     alert(err);
   })
@@ -338,7 +330,7 @@ const APP = {
     let item = arr[i];
     // console.log(item);
     let posterPath = item.poster_path;
-    
+
       if(posterPath !== null){ 
           let imgPath = APP.secureBaseUrl + APP.posterSize + posterPath;
           console.log(imgPath);
