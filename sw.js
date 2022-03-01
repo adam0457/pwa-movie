@@ -1,7 +1,7 @@
 const version = 10;
 //let isOnline = true; //will get updated via messaging
 const staticCache = `pwaEx3StaticCache${version}`;
-const imageCache = 'imagesCacheTest-v1';
+const imagesCache = 'imagesCache';
 const dynamicCache = `pwaEx3DynamicCache${version}`;
 const cacheList = [
   '/',
@@ -42,7 +42,7 @@ self.addEventListener('activate', (ev) => {
         return Promise.all(
           keys
             .filter((key) => {
-              if (key === staticCache || key === dynamicCache || key === imageCache) {
+              if (key === staticCache || key === dynamicCache || key === imagesCache) {
                 return false;
               } else {
                 return true;

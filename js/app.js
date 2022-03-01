@@ -212,23 +212,38 @@ const APP = {
   },
 
   putInCacheAndDB: async (images, searchResults, store)=>{
-        let response = await caches.open('imagesCacheTest-v1');
+        let response = await caches.open('imagesCache');
         let cache = await response.addAll(images);
         APP.saveToDb(searchResults, store);
 
   },
 
   createArrImages:(data)=>{
-    // console.log(` Data inside the createArrImages function: ${data}`);
-    let moviesWithPoster = data.filter((element) => element.poster_path !== null);
-    let ArrImages = moviesWithPoster.map(movie => {
-        if(movie.poster_path!== null){
-          let poster = APP.secureBaseUrl + APP.posterSize + movie.poster_path;
-          return poster;
-        }  
-  })
+  
+      let moviesWithPoster = data.filter((element) => element.poster_path !== null);
+      let ArrImages = moviesWithPoster.map(movie => {
+          if(movie.poster_path!== null){
+            // let poster = movie.poster_path;
+            let poster = APP.secureBaseUrl + APP.posterSize + movie.poster_path;
+            return poster;
+          }  
+    })
+
+    /** ----- the code below is for testing after ----- */
+
+    // let ArrImages = data.map(movie => {
+    //     let poster = null;
+    //     if(movie.poster_path !== null){
+    //       poster = movie.poster_path;
+    //       return poster;
+    //     }else{
+    //       poster = '/img/android-chrome-512x512.png'
+    //       return poster;
+    //     }
+    // })
     
-    return ArrImages;
+      
+      return ArrImages;
   },
 
   saveToDb: (searchResults, store) => {
@@ -336,13 +351,18 @@ const APP = {
       ignoreVary: false, //ignore if the response has a VARY header
     };
     let item = arr[i];
+    let posterPath = null;
+    if(item){
+
+      posterPath = item.poster_path;
+    }
     // console.log(item);
-    let posterPath = item.poster_path;
 
       if(posterPath !== null){ 
           let imgPath = APP.secureBaseUrl + APP.posterSize + posterPath;
-          console.log(imgPath);
+          // console.log(imgPath);
           let response = await caches.match(imgPath, options);
+          // let response = await caches.match(posterPath, options);
           APP.theBlob = await response.blob();
           // console.log(APP.theBlob);
           let card = document.createElement('div');
@@ -354,7 +374,7 @@ const APP = {
 
           let url = URL.createObjectURL(APP.theBlob);
           let img = document.createElement('img');
-          // img.setAttribute('src', imgPath);
+        
           img.setAttribute('src', url);
           let contentWrap = document.createElement('div');
           contentWrap.classList.add('content-wrap');
@@ -380,6 +400,11 @@ const APP = {
           if(i <= arr.length){
             APP.buildPosterCards(arr,i, df)
           }
+      }else{
+          i++;
+          if(i <= arr.length){
+          APP.buildPosterCards(arr,i, df)
+        }
       }
     
   },
