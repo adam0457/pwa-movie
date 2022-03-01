@@ -1,5 +1,4 @@
 const version = 10;
-//let isOnline = true; //will get updated via messaging
 const staticCache = `pwaEx3StaticCache${version}`;
 const imagesCache = 'imagesCache';
 const dynamicCache = `pwaEx3DynamicCache${version}`;
@@ -12,7 +11,6 @@ const cacheList = [
   '/css/main.css',
   '/js/app.js',
   '/manifest.json',  
-  //TODO: add all the icons from the img folder
   'favicon.ico',
   '/img/android-chrome-192x192.png',
   '/img/android-chrome-512x512.png',
@@ -21,9 +19,7 @@ const cacheList = [
   '/img/favicon-32x32.png',
   '/img/mstile-150x150.png',
   '/img/logo-TMDB.svg',
-  //TODO: add a google font in your css and here
-  'https://fonts.googleapis.com/css2?family=Roboto:ital@0;1&display=swap'
-  //TODO: if you add any other JS files include them here
+  'https://fonts.googleapis.com/css2?family=Nunito&family=Roboto:ital@0;1&display=swap'
 ];
 
 
@@ -75,7 +71,6 @@ self.addEventListener('fetch', (ev) => {
             console.log('SW fetch failed');
             console.warn(err);
             return  caches.match('/404.html').then(cacheRes => {
-                console.log(cacheRes);
                 return cacheRes;
             });
           

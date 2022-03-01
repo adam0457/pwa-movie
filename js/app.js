@@ -14,30 +14,24 @@ const APP = {
     profileSize: null,
     APIKEY : null,
     cards : null,
-    inputName : null,
-    urlConfig : `https://api.themoviedb.org/3/configuration?api_key=75789c3f5ba1cec6147292baa65a1ecc`,
-    btnSearch: null,
-    //queryMovie:null,
+    inputName : null,   
+    urlConfig : null,
+    btnSearch: null,   
     results:[],
     keyword:null,
     movieId:null,
-    movieTitle:null,
-    dataList:null,
+    movieTitle:null,   
     nextPage:null,  
     searchOrSuggest:null,
-    theBlob:null,
-    // obj:null,
-
-    /** variables for the dB */
+    theBlob:null,   
     DB:null,
-    version:2,
+  
 
 
   init: () => {
     APP.cards = document.getElementById('cards');
     APP.inputName = document.getElementById('search');
-    APP.btnSearch = document.getElementById('btn-search');
-    
+    APP.btnSearch = document.getElementById('btn-search');    
 
     APP.APIKEY = '75789c3f5ba1cec6147292baa65a1ecc';
     APP.urlConfig = `https://api.themoviedb.org/3/configuration?api_key=75789c3f5ba1cec6147292baa65a1ecc`;
@@ -81,7 +75,7 @@ const APP = {
       APP.DB = dbOpenRequest.result;
   };
 
-  } ,
+  },
 
   search: (ev) => {
     ev.preventDefault();
@@ -89,13 +83,13 @@ const APP = {
     let searchStore = 'searchStore';
     APP.nextPage = `./search-results.html?keyword=${APP.keyword}`;
     APP.searchOrSuggest = 'search';
+
     if(APP.keyword !== ''){
-      // APP.findInDBorFetch(APP.queryMovie);
-      // APP.checkInDB(APP.queryMovie);
+      
       APP.checkInDB(APP.keyword, searchStore, APP.decideAfter); 
     }
     else {
-      
+          // The user didn't enter anything
         let msg = document.getElementById('no-keyword-entered');
         msg.textContent =  `" You have not entered anything "`;
     }
@@ -103,27 +97,30 @@ const APP = {
     APP.inputName.value = '';  
   },
 
-  decideAfter:()=>{
-        // console.log(APP.results);
+  /**
+   *  This function will make the decision to fetch the movies or the similar movies 
+      or navigate to the next page
+   */
 
+  decideAfter:()=>{ 
         if(APP.results.length === 0){ 
             if(APP.searchOrSuggest === 'search'){
               APP.fetchMovies(APP.keyword)
-              // console.log('no data in DB we will call fetch movies');
+            
             } else if(APP.searchOrSuggest === 'suggest'){
               APP.fetchSimilarMovies(APP.movieId);
-              // console.log('no data in DB we will call fetch similar');
+            
             } 
           
-        }else{
-            // console.log('Data found in DB');
-            // APP.navigate(`./search-results.html?keyword=${APP.keyword}`);
+        }else{          
 
-            APP.navigate(APP.nextPage);
-          
+            APP.navigate(APP.nextPage);          
         }
   },
 
+  /**
+   *  This function will check in the DB if the keyword is there before doing a fetch 
+   */
   checkInDB:(keyword, store, callBack)=>{
     let tx = APP.DB.transaction(store, 'readwrite');
     tx.onerror = (err) => {
@@ -147,6 +144,10 @@ const APP = {
     
   },  
 
+  /**
+   * We use this function to retrieve results from the DB after navigating to the search results page
+   * or the suggested page
+   */
   getResultsFromDB:(keyword, store) =>{
 
     let tx = APP.DB.transaction(store, 'readwrite');
@@ -174,6 +175,9 @@ const APP = {
     };
   },   
 
+  /**
+   * I use the getConfig function to get the basic configuration from the TMDB API
+   */
   getConfig: () => {
     fetch(APP.urlConfig)
     .then(response => {
@@ -182,7 +186,6 @@ const APP = {
     .then(data => {
       /** I need those info from the configuration fetch to display the images later on */
 
-      // console.log(data);
         APP.secureBaseUrl = data.images.secure_base_url;
         APP.logoSize = data.images.logo_sizes[6];
         APP.posterSize = data.images.poster_sizes[6];
@@ -196,6 +199,11 @@ const APP = {
     })
   },
 
+  /**
+   *  I fetch the movies, I create an array of images from the response and I put 
+   *  the results in the DB and the images in the cacheImages 
+   */
+
   fetchMovies: (queryString) => {
     let url = `https://api.themoviedb.org/3/search/movie?api_key=${APP.APIKEY}&query=${queryString}`
     fetch(url)
@@ -207,21 +215,28 @@ const APP = {
                 let searchStore = 'searchStore';
                 let images =  APP.createArrImages(data.results); 
                               
-                APP.putInCacheAndDB(images, searchResults, searchStore );
-                
+                APP.putInCacheAndDB(images, searchResults, searchStore );                
                               
               }).catch(err => {
-                // alert(err);
+              
                 APP.navigate('/404.html');
               })
   },
+
+  /**
+   *  This is the method that will put the images in the cache and call the saveToDb method 
+   *  to put the data in the DB
+   */
 
   putInCacheAndDB: async (images, searchResults, store)=>{
         let response = await caches.open('imagesCache');
         let cache = await response.addAll(images);
         APP.saveToDb(searchResults, store);
-
   },
+
+  /**
+   *  This is to create an array of images from the fetch
+   */
 
   createArrImages:(data)=>{
   
@@ -229,8 +244,7 @@ const APP = {
       let ArrImages = moviesWithPoster.map(movie => {
         
             let poster = APP.secureBaseUrl + APP.posterSize + movie.poster_path;
-            return poster;
-        
+            return poster;        
     })
 
     return ArrImages;
@@ -275,17 +289,21 @@ const APP = {
             
             APP.keyword = params.get('keyword');
             let searchStore = 'searchStore';
-            // console.log(`the keyword is: ${APP.keyword}`); 
+            
             let showResults = document.getElementById('show-results');
-            showResults.textContent = ` "${APP.keyword}"`;        
-            setTimeout(()=>{
-              // console.log(APP.DB);
+            showResults.textContent = ` "${APP.keyword}"`; 
+
+          // I use a setTimeout to wait the DB to load after navigating to this page
+          // before retrieving the data  
+
+            setTimeout(()=>{            
               APP.getResultsFromDB(APP.keyword, searchStore);
             },300);            
                 
     }
     if(document.body.id === 'suggest'){
         console.log('We are on the suggest page');
+
         let url = new URL(window.location.href);
             let params = url.searchParams;
             
@@ -295,11 +313,13 @@ const APP = {
             let showSimilar = document.getElementById('show-similar');
             showSimilar.textContent = ` "${APP.movieTitle}"`;  
             
-            // console.log(`the keyword is: ${APP.keyword}`); 
-            // console.log(`the movieId is: ${APP.movieId}`); 
+          
             let suggestedStore = 'suggestedStore';
+
+             // I use a setTimeout to wait the DB to load after navigating to this page
+          // before retrieving the data  
+
             setTimeout(()=>{
-              // console.log(APP.DB);
               APP.getResultsFromDB(APP.movieId, suggestedStore);
             },1000);   
           
@@ -312,6 +332,11 @@ const APP = {
     }
   },
 
+  /**
+   *  This function is to get the previous keywords when the user is offline and we want to propose other
+   *  options
+   */
+
   getPreviousKeywords:(store)=>{
     let tx = APP.DB.transaction(store, 'readwrite');
   
@@ -321,9 +346,8 @@ const APP = {
     tx.oncomplete = (ev) => {
       console.log('finished the transaction... wanna do something else');
     };
-    let searchStore = tx.objectStore(store);
-  
-    // let searchWord = keyword;
+    let searchStore = tx.objectStore(store);  
+    
     let getRequest = searchStore.getAll();
     getRequest.onerror = (err) => {
     
@@ -331,12 +355,13 @@ const APP = {
     getRequest.onsuccess = (ev) => {
       if(getRequest.result.length > 0){
         let result = getRequest.result;
-        // console.log(result);
         APP.showPreviousSearch(result);
       }
       
     };
   },
+
+  /** This is to display the previous keywords */
 
   showPreviousSearch:(arr)=>{
     let prevKeywords = document.getElementById('previous-keywords');
@@ -350,15 +375,16 @@ const APP = {
     arr.forEach(search => {
         let li = document.createElement('li');
         li.setAttribute('data-keyword', search.keyword);
-        // li.textContent = search.keyword;
         li.innerHTML = ` "${search.keyword}" ` ;
         df.appendChild(li);
     })
     listSearch.appendChild(df);
     prevKeywords.appendChild(listSearch);
-    // console.log(listSearch);
+  
 
   },
+
+  /** When the user clicks a previous keyword from the 404 page */
 
   clickPreviousKeyword:(ev)=>{
     APP.keyword = ev.target.closest('li').getAttribute('data-keyword');
@@ -366,8 +392,10 @@ const APP = {
     APP.navigate(APP.nextPage);
   },
 
+  /** This is to fetch similar movies, put images in cache and store results in DB */
+
   fetchSimilarMovies: (id) => {
-  // console.log(`inside fetch similar movies the movieId is ${id}`);
+  
   let url =`https://api.themoviedb.org/3/movie/${id}/similar?api_key=${APP.APIKEY}`;
   fetch(url)
   .then(response => {
@@ -381,12 +409,14 @@ const APP = {
     APP.putInCacheAndDB(images, searchResults, suggestedStore );
   
   }).catch(err => {
-    // alert(err);
+  
     APP.navigate('/404.html');
   })
 
 
   },
+
+  /** This is to build the cards for displaying the movies  */
 
   buildPosterCards:async(arr, i, df)=>{
 
@@ -395,21 +425,26 @@ const APP = {
       ignoreMethod: true, //ignore the method - POST, GET, etc
       ignoreVary: false, //ignore if the response has a VARY header
     };
+
+    /**
+     * I could have used a loop but it goes too fast when I'm taking the images from the cache
+     * so I use this if statement and I call the same function again
+     */
+
     let item = arr[i];
     let posterPath = null;
     if(item){
-
       posterPath = item.poster_path;
     }
-    // console.log(item);
+  
 
       if(posterPath !== null){ 
           let imgPath = APP.secureBaseUrl + APP.posterSize + posterPath;
-          // console.log(imgPath);
+        
           let response = await caches.match(imgPath, options);
-          // let response = await caches.match(posterPath, options);
+        
           APP.theBlob = await response.blob();
-          // console.log(APP.theBlob);
+        
           let card = document.createElement('div');
           card.classList.add('card');          
           card.setAttribute('data-movie-id', item.id);
@@ -454,6 +489,8 @@ const APP = {
     
   },
 
+  /** For displaying the movies */
+
   displayResults:(arr)=>{
     let df = document.createDocumentFragment();
     if(arr.length > 0){
@@ -467,17 +504,18 @@ const APP = {
   
   },
 
+  /** When the user clicks on a movie */
+
   handleClickMovie: (ev) => {
     // I need to pass the id of the movie along with the keyword to the suggested-results page
     APP.movieId = ev.target.closest('.card').getAttribute('data-movie-id');
     APP.movieTitle = ev.target.closest('.card').getAttribute('data-movie-title');
     let suggestedStore = 'suggestedStore';
-    // APP.nextPage = `./suggested-movies.html?keyword=${APP.keyword}&movieId=${APP.movieId}`;
+    
     APP.nextPage = `./suggested-movies.html?movieId=${APP.movieId}&movieTitle=${APP.movieTitle}`;
     APP.searchOrSuggest = 'suggest';
   
   APP.checkInDB(APP.movieId, suggestedStore, APP.decideAfter);
-  // APP.navigate(`./suggested-movies.html?keyword=${APP.keyword}&movieId=${movieId}`);
 
   },
 
