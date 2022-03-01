@@ -41,7 +41,7 @@ const APP = {
     APP.APIKEY = '75789c3f5ba1cec6147292baa65a1ecc';
     APP.urlConfig = `https://api.themoviedb.org/3/configuration?api_key=75789c3f5ba1cec6147292baa65a1ecc`;
 
-    APP.registerSW();
+    // APP.registerSW();
     APP.initDb();
     APP.getConfig();    
     APP.addListeners();
@@ -222,33 +222,17 @@ const APP = {
   
       let moviesWithPoster = data.filter((element) => element.poster_path !== null);
       let ArrImages = moviesWithPoster.map(movie => {
-          if(movie.poster_path!== null){
-            // let poster = movie.poster_path;
+        
             let poster = APP.secureBaseUrl + APP.posterSize + movie.poster_path;
             return poster;
-          }  
+        
     })
 
-    /** ----- the code below is for testing after ----- */
-
-    // let ArrImages = data.map(movie => {
-    //     let poster = null;
-    //     if(movie.poster_path !== null){
-    //       poster = movie.poster_path;
-    //       return poster;
-    //     }else{
-    //       poster = '/img/android-chrome-512x512.png'
-    //       return poster;
-    //     }
-    // })
-    
-      
-      return ArrImages;
+    return ArrImages;
   },
 
   saveToDb: (searchResults, store) => {
-    // console.log(` Data inside the saveToDb function: ${searchResults.results}`);
-
+  
     let tx = APP.DB.transaction(store, 'readwrite');
     tx.oncomplete = function(ev) {
       
@@ -381,13 +365,13 @@ const APP = {
 
           let movieTitle = document.createElement('p');
           movieTitle.textContent = item.title;
+        
+          let releaseDate = document.createElement('p');
+          releaseDate.textContent = `Release Date: ${item.release_date}`;
 
-          let linkToSimilar = document.createElement('p');
-          linkToSimilar.innerHTML = `<span> Similar movies </span>`;
 
-
-          contentWrap.appendChild(movieTitle);
-          contentWrap.appendChild(linkToSimilar);
+          contentWrap.appendChild(movieTitle);        
+          contentWrap.appendChild(releaseDate);
 
           imgWrap.appendChild(img);
           card.appendChild(imgWrap);
@@ -416,49 +400,6 @@ const APP = {
     APP.buildPosterCards(arr,i, df) 
   
   },
-
-  // displayMovies: (arr) => {
-
-  //   let df = document.createDocumentFragment();
-
-  //   arr.forEach(item => {
-  //     let posterPath = item.poster_path;
-    
-  //     if(posterPath !== null){ 
-  //         let imgPath = APP.secureBaseUrl + APP.posterSize + posterPath;
-  //         //console.log(imgPath); 
-  //         let card = document.createElement('div');
-  //         card.classList.add('card');
-  //         card.setAttribute('data-movie-id', item.id);
-
-  //         let imgWrap = document.createElement('div');
-  //         imgWrap.classList.add('img-wrap');
-
-  //         let img = document.createElement('img');
-  //         img.setAttribute('src', imgPath);
-
-  //         let contentWrap = document.createElement('div');
-  //         contentWrap.classList.add('content-wrap');
-
-  //         let movieTitle = document.createElement('p');
-  //         movieTitle.textContent = item.title;
-
-  //         let linkToSimilar = document.createElement('p');
-  //         linkToSimilar.innerHTML = `<span> Similar movies </span>`;
-
-
-  //         contentWrap.appendChild(movieTitle);
-  //         contentWrap.appendChild(linkToSimilar);
-
-  //         imgWrap.appendChild(img);
-  //         card.appendChild(imgWrap);
-  //         card.appendChild(contentWrap);
-
-  //         df.appendChild(card);
-  //     }
-  //   });
-  //   APP.cards.append(df);
-  // },
 
   handleClickMovie: (ev) => {
     // I need to pass the id of the movie along with the keyword to the suggested-results page

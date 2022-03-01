@@ -23,30 +23,26 @@
 </head>
 <body id="results">
   <header>
-    <div class="container">
-      <h1><a href="/index.html">Suggest a movie</a></h1>
-      <form action="">
-        <label for="search">Search a movie</label>
-        <input type="search" id="search" name="search">
-        <button id="btn-search" type="submit">Submit</button>
-        <!-- <input id="btn-search" type="submit"> -->
-      </form>
-    </div>
+      <div class="container">
+        <form action="">
+          <label for="search">Search a movie</label>
+          <input type="search" id="search" name="search">
+          <button id="btn-search" type="submit">Search</button>      
+        </form>
+        <h1>Search results for the term:<span id="show-results"></span> </h1>
+      </div>
   </header>
 
   <main>
     <div class="container">
-        <p>Search results for the term:<span id="show-results"></span> </p>
-        <div id="cards">
-          <!-- <div class="card"> Card </div>
-          <div class="card"> Card </div>
-          <div class="card"> Card </div>
-          <div class="card"> Card </div> -->
+          <div id="cards">     
         </div>        
     </div>
 </main>
 <footer>
-
+  <div class="container">
+    <h2><a href="/index.html">Home</a></h2>
+  </div>
 </footer>
 <script src="./js/app.js"></script>
   
