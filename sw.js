@@ -20,6 +20,7 @@ const cacheList = [
   '/img/favicon-16x16.png',
   '/img/favicon-32x32.png',
   '/img/mstile-150x150.png',
+  '/img/logo-TMDB.svg',
   //TODO: add a google font in your css and here
   'https://fonts.googleapis.com/css2?family=Roboto:ital@0;1&display=swap'
   //TODO: if you add any other JS files include them here
