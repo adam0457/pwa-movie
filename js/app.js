@@ -23,7 +23,7 @@ const APP = {
     movieId:null,
     movieTitle:null,
     dataList:null,
-    nextPage:null,
+    nextPage:null,  
     searchOrSuggest:null,
     theBlob:null,
     // obj:null,
@@ -37,11 +37,12 @@ const APP = {
     APP.cards = document.getElementById('cards');
     APP.inputName = document.getElementById('search');
     APP.btnSearch = document.getElementById('btn-search');
+    
 
     APP.APIKEY = '75789c3f5ba1cec6147292baa65a1ecc';
     APP.urlConfig = `https://api.themoviedb.org/3/configuration?api_key=75789c3f5ba1cec6147292baa65a1ecc`;
 
-    // APP.registerSW();
+    APP.registerSW();
     APP.initDb();
     APP.getConfig();    
     APP.addListeners();
@@ -300,9 +301,65 @@ const APP = {
           
     }
     if(document.body.id === 'fourohfour'){
-        //on the 404 page
-        // console.log('We are on the 404 page');
+      let searchStore = 'searchStore';
+        setTimeout(()=>{
+          APP.getPreviousKeywords(searchStore);
+        },300); 
     }
+  },
+
+  getPreviousKeywords:(store)=>{
+    let tx = APP.DB.transaction(store, 'readwrite');
+  
+    tx.onerror = (err) => {
+      console.log('failed to successfully run the transaction');
+    };
+    tx.oncomplete = (ev) => {
+      console.log('finished the transaction... wanna do something else');
+    };
+    let searchStore = tx.objectStore(store);
+  
+    // let searchWord = keyword;
+    let getRequest = searchStore.getAll();
+    getRequest.onerror = (err) => {
+    
+    };
+    getRequest.onsuccess = (ev) => {
+      if(getRequest.result.length > 0){
+        let result = getRequest.result;
+        // console.log(result);
+        APP.showPreviousSearch(result);
+      }
+      
+    };
+  },
+
+  showPreviousSearch:(arr)=>{
+    let prevKeywords = document.getElementById('previous-keywords');
+    let msg =  document.createElement('p');
+    msg.textContent = "Here are some other keywords that you have used in the past:";
+    prevKeywords.appendChild(msg);
+    let listSearch = document.createElement('ul');
+    listSearch.addEventListener('click', APP.clickPreviousKeyword);
+    let df = document.createDocumentFragment();
+
+    arr.forEach(search => {
+        let li = document.createElement('li');
+        li.setAttribute('data-keyword', search.keyword);
+        // li.textContent = search.keyword;
+        li.innerHTML = ` "${search.keyword}" ` ;
+        df.appendChild(li);
+    })
+    listSearch.appendChild(df);
+    prevKeywords.appendChild(listSearch);
+    // console.log(listSearch);
+
+  },
+
+  clickPreviousKeyword:(ev)=>{
+    APP.keyword = ev.target.closest('li').getAttribute('data-keyword');
+    APP.nextPage = `./search-results.html?keyword=${APP.keyword}`;
+    APP.navigate(APP.nextPage);
   },
 
   fetchSimilarMovies: (id) => {
@@ -363,10 +420,10 @@ const APP = {
           let contentWrap = document.createElement('div');
           contentWrap.classList.add('content-wrap');
 
-          let movieTitle = document.createElement('p');
+          let movieTitle = document.createElement('h3');
           movieTitle.textContent = item.title;
         
-          let releaseDate = document.createElement('p');
+          let releaseDate = document.createElement('h3');
           releaseDate.textContent = `Release Date: ${item.release_date}`;
 
 
