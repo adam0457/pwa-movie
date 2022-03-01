@@ -206,7 +206,8 @@ const APP = {
                 
                               
               }).catch(err => {
-                alert(err);
+                // alert(err);
+                APP.navigate('/404.html');
               })
   },
 
@@ -320,7 +321,8 @@ const APP = {
     APP.putInCacheAndDB(images, searchResults, suggestedStore );
   
   }).catch(err => {
-    alert(err);
+    // alert(err);
+    APP.navigate('/404.html');
   })
 
 

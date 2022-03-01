@@ -1,7 +1,7 @@
 const version = 10;
 //let isOnline = true; //will get updated via messaging
 const staticCache = `pwaEx3StaticCache${version}`;
-// const dynamicCache = 'imagesCacheTest-v1';
+const imageCache = 'imagesCacheTest-v1';
 const dynamicCache = `pwaEx3DynamicCache${version}`;
 const cacheList = [
   '/',
@@ -42,7 +42,7 @@ self.addEventListener('activate', (ev) => {
         return Promise.all(
           keys
             .filter((key) => {
-              if (key === staticCache || key === dynamicCache) {
+              if (key === staticCache || key === dynamicCache || key === imageCache) {
                 return false;
               } else {
                 return true;
@@ -74,8 +74,9 @@ self.addEventListener('fetch', (ev) => {
             console.log('SW fetch failed');
             console.warn(err);
             return  caches.match('/404.html').then(cacheRes => {
+                console.log(cacheRes);
                 return cacheRes;
-              });
+            });
           
           })
       );
