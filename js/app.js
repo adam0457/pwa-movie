@@ -292,7 +292,7 @@ const APP = {
             setTimeout(()=>{
               // console.log(APP.DB);
               APP.getResultsFromDB(APP.keyword, searchStore);
-            },1000);            
+            },300);            
                 
     }
     if(document.body.id === 'suggest'){
