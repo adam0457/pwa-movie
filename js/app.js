@@ -94,7 +94,11 @@ const APP = {
       // APP.checkInDB(APP.queryMovie);
       APP.checkInDB(APP.keyword, searchStore, APP.decideAfter); 
     }
-    else {alert('You did not enter anything')}
+    else {
+      
+        let msg = document.getElementById('no-keyword-entered');
+        msg.textContent =  `" You have not entered anything "`;
+    }
   
     APP.inputName.value = '';  
   },
@@ -452,9 +456,14 @@ const APP = {
 
   displayResults:(arr)=>{
     let df = document.createDocumentFragment();
-    let i = 0;
-    console.log(arr.length);
-    APP.buildPosterCards(arr,i, df) 
+    if(arr.length > 0){
+      let i = 0;
+      APP.buildPosterCards(arr,i, df) 
+    }else{
+      let msg = document.getElementById('no-results');
+      msg.textContent = `" No results found " `;
+      
+    }
   
   },
 
