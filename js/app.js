@@ -36,7 +36,7 @@ const APP = {
     APP.APIKEY = '75789c3f5ba1cec6147292baa65a1ecc';
     APP.urlConfig = `https://api.themoviedb.org/3/configuration?api_key=75789c3f5ba1cec6147292baa65a1ecc`;
 
-    APP.registerSW();
+    // APP.registerSW();
     APP.initDb();
     APP.getConfig();    
     APP.addListeners();
@@ -45,7 +45,7 @@ const APP = {
   },
 
   registerSW: () => {
-    navigator.serviceWorker.register('/sw.js').catch(function (err) {
+    navigator.serviceWorker.register('./sw.js').catch(function (err) {
       console.warn(err);
     });
   },
@@ -489,13 +489,132 @@ const APP = {
     
   },
 
+  buildPosterCardsTest:async(arr, i, df)=>{
+
+    let options = {
+      ignoreSearch: true, //ignore the queryString
+      ignoreMethod: true, //ignore the method - POST, GET, etc
+      ignoreVary: false, //ignore if the response has a VARY header
+    };
+
+    /**
+     * I could have used a loop but it goes too fast when I'm taking the images from the cache
+     * so I use this if statement and I call the same function again
+     */
+
+    let item = arr[i];
+    let posterPath = null;
+    if(item){
+      posterPath = item.poster_path;
+    }
+  
+
+      if(posterPath !== null){ 
+          let imgPath = APP.secureBaseUrl + APP.posterSize + posterPath;
+        
+          let response = await caches.match(imgPath, options);
+        
+          APP.theBlob = await response.blob();
+
+          let scene = document.createElement('div');
+          scene.classList.add('scene');
+        
+          let card = document.createElement('div');
+          card.classList.add('flip-card');          
+          card.setAttribute('data-movie-id', item.id);
+          card.setAttribute('data-movie-title', item.title);
+
+          let front = document.createElement('div');
+          front.classList.add('card__face','card__face--front');
+
+          let back = document.createElement('div');
+          back.classList.add('card__face', 'card__face--back');
+
+          let btnWrapFront =  document.createElement('div');
+          btnWrapFront.classList.add('btn-wrap');
+
+          let btnWrapBack =  document.createElement('div');
+          btnWrapBack.classList.add('btn-wrap');
+
+          let descriptionWrap = document.createElement('div');
+          descriptionWrap.classList.add('description-wrap');
+
+
+          let flipBtn = document.createElement('button');
+          flipBtn.classList.add('button-flip');
+          flipBtn.textContent = 'Back';
+        
+          let flipBtn2 = document.createElement('button');
+          flipBtn2.classList.add('button-flip');
+          flipBtn2.textContent = 'Front';
+            
+          
+          btnWrapFront.appendChild(flipBtn);
+          btnWrapBack.appendChild(flipBtn2);
+
+
+          let description = document.createElement('h3');
+          description.textContent = item.overview;
+
+          let imgWrap = document.createElement('div');
+          imgWrap.classList.add('img-wrap');
+
+          let url = URL.createObjectURL(APP.theBlob);
+          let img = document.createElement('img');
+        
+          img.setAttribute('src', url);
+          let contentWrap = document.createElement('div');
+          contentWrap.classList.add('content-wrap');
+
+          let movieTitle = document.createElement('h3');
+          movieTitle.textContent = item.title;
+        
+          let releaseDate = document.createElement('h3');
+          releaseDate.textContent = `Release Date: ${item.release_date}`;
+
+
+          contentWrap.appendChild(movieTitle);        
+          contentWrap.appendChild(releaseDate);
+
+          descriptionWrap.appendChild(description);
+
+          imgWrap.appendChild(img);
+          front.appendChild(imgWrap);
+          front.appendChild(contentWrap)
+          front.appendChild(btnWrapFront);
+          back.appendChild(descriptionWrap);
+          back.appendChild(btnWrapBack);
+
+          card.appendChild(front);
+          card.appendChild(back);
+
+          scene.appendChild(card);
+        
+          df.appendChild(scene);
+          APP.cards.append(df);
+
+          i++;
+          if(i <= arr.length){
+            APP.buildPosterCardsTest(arr,i, df)
+          }
+      }else{
+          i++;
+          if(i <= arr.length){
+          APP.buildPosterCardsTest(arr,i, df)
+        }
+      }
+    
+  },
+
   /** For displaying the movies */
 
   displayResults:(arr)=>{
     let df = document.createDocumentFragment();
     if(arr.length > 0){
       let i = 0;
-      APP.buildPosterCards(arr,i, df) 
+      // APP.buildPosterCards(arr,i, df) 
+      console.log(arr);
+      APP.buildPosterCardsTest(arr,i, df) 
     }else{
       let msg = document.getElementById('no-results');
       msg.textContent = `" No results found " `;
@@ -504,18 +623,29 @@ const APP = {
   
   },
 
+
   /** When the user clicks on a movie */
 
   handleClickMovie: (ev) => {
-    // I need to pass the id of the movie along with the keyword to the suggested-results page
-    APP.movieId = ev.target.closest('.card').getAttribute('data-movie-id');
-    APP.movieTitle = ev.target.closest('.card').getAttribute('data-movie-title');
-    let suggestedStore = 'suggestedStore';
-    
-    APP.nextPage = `./suggested-movies.html?movieId=${APP.movieId}&movieTitle=${APP.movieTitle}`;
-    APP.searchOrSuggest = 'suggest';
-  
-  APP.checkInDB(APP.movieId, suggestedStore, APP.decideAfter);
+      console.log(ev.target.nodeName);
+      if(ev.target.nodeName === 'BUTTON'){
+
+        console.log(ev.target.closest('.flip-card'));
+        ev.target.closest('.flip-card').classList.toggle('is-flipped');
+
+      }else {
+
+            // I need to pass the id of the movie along with the keyword to the suggested-results page
+          APP.movieId = ev.target.closest('.flip-card').getAttribute('data-movie-id');
+          APP.movieTitle = ev.target.closest('.flip-card').getAttribute('data-movie-title');
+          let suggestedStore = 'suggestedStore';
+          
+          APP.nextPage = `./suggested-movies.html?movieId=${APP.movieId}&movieTitle=${APP.movieTitle}`;
+          APP.searchOrSuggest = 'suggest';
+        
+          APP.checkInDB(APP.movieId, suggestedStore, APP.decideAfter);
+
+      }    
 
   },
 
