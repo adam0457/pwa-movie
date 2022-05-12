@@ -12,13 +12,13 @@ const cacheList = [
   '/js/app.js',
   '/manifest.json',  
   'favicon.ico',
-  '/img/android-chrome-192x192.png',
-  '/img/android-chrome-512x512.png',
-  '/img/apple-touch-icon.png',
-  '/img/favicon-16x16.png',
-  '/img/favicon-32x32.png',
-  '/img/mstile-150x150.png',
-  '/img/logo-TMDB.svg',
+  './img/android-chrome-512x512.png',
+  './img/apple-touch-icon.png',
+  './img/android-chrome-192x192.png',
+  './img/favicon-16x16.png',
+  './img/favicon-32x32.png',
+  './img/mstile-150x150.png',
+  './img/logo-TMDB.svg',
   'https://fonts.googleapis.com/css2?family=Nunito&family=Roboto:ital@0;1&display=swap'
 ];
 
