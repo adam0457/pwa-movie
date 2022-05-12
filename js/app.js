@@ -44,11 +44,11 @@ const APP = {
   
   },
 
-  // registerSW: () => {
-  //   navigator.serviceWorker.register('./sw.js').catch(function (err) {
-  //     console.warn(err);
-  //   });
-  // },
+  registerSW: () => {
+    navigator.serviceWorker.register('./sw.js').catch(function (err) {
+      console.warn(err);
+    });
+  },
 
   addListeners: () => {
   
