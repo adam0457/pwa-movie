@@ -530,12 +530,6 @@ const APP = {
           let back = document.createElement('div');
           back.classList.add('card__face', 'card__face--back');
 
-          // let btnWrapFront =  document.createElement('div');
-          // btnWrapFront.classList.add('btn-wrap');
-
-          // let btnWrapBack =  document.createElement('div');
-          // btnWrapBack.classList.add('btn-wrap');
-
           let descriptionWrap = document.createElement('div');
           descriptionWrap.classList.add('description-wrap');
 
@@ -548,10 +542,6 @@ const APP = {
           flipBtn2.classList.add('button-flip');
           flipBtn2.textContent = 'Front';
             
-          
-          // btnWrapFront.appendChild(flipBtn);
-          // btnWrapBack.appendChild(flipBtn2);
-
 
           let description = document.createElement('h3');
           description.textContent = item.overview;
