@@ -21,20 +21,17 @@ h1, h2, h3, h4, h5 {
 
 h1 {
   margin-top: 0;
-  /* font-size: 2rem; */
   font-size: 1.5rem;
   color: hsl(90,4%,39%);
 }
 
 h2 {
-  /* font-size: 1.441rem; */
   font-size: 1.25rem;
 }
 
 h3 {
   color:hsl(90,4%,39%) ;
   font-size: 1rem;
-  /* margin-bottom: 1.5rem; */
 }
 
 /* 
@@ -66,8 +63,7 @@ a {
 .container {
   max-width: 80rem;  
   margin: 0 auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  padding: 1rem;
 }
 
 
@@ -76,15 +72,12 @@ header {
   top: 0;
   width: 100%;
   background-color: hsl(39,100%,53%);
-  padding-top: .5rem;
-  padding-bottom: 1rem; 
   z-index: 1;
 
 }
 
 label, p {
   color:hsl(90,4%,39%) ;
-  /* font-size: 1.4rem; */
   font-size: 1rem;
 }
 
@@ -159,8 +152,6 @@ main {
 .scene {
   max-width: 15rem;
   height: 30rem;
-  /* max-width: 35rem;
-  height: 41rem; */
   perspective: 600px;
 }
 
@@ -231,17 +222,9 @@ footer {
   width: 100%;
   background-color: hsl(39,100%,53%);
   min-height: 5vh;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
 }
 
 @media only screen and (min-width: 30em) {
-
-  .container {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
   .container-body {
     max-width: 30rem;  
     margin: 0 auto; 
@@ -255,16 +238,10 @@ footer {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2rem 1rem;  
-  
   }
 }
 
 @media only screen and (min-width: 50em) {
-
-  .container {
-    padding-left: 0;
-    padding-right: 0;
-  }
 
   .container-body {
     max-width: 45rem;  
@@ -284,12 +261,6 @@ footer {
 }
 
   @media only screen and (min-width: 80em) {
-
-    .container {
-      padding-left: 0;
-      padding-right: 0;
-    }
-  
     .container-body {
       max-width: 77rem;  
       margin: 0 auto; 
