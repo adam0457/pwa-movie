@@ -36,7 +36,7 @@ const APP = {
     APP.APIKEY = '75789c3f5ba1cec6147292baa65a1ecc';
     APP.urlConfig = `https://api.themoviedb.org/3/configuration?api_key=75789c3f5ba1cec6147292baa65a1ecc`;
 
-    // APP.registerSW();
+    APP.registerSW();
     APP.initDb();
     APP.getConfig();    
     APP.addListeners();
